@@ -3,7 +3,6 @@ package goweb
 import (
 	"net/http"
 	"strings"
-    "strconv"
 )
 
 // Object holding details about the request and responses
@@ -77,11 +76,6 @@ func (c *Context) IsDelete() bool {
 	return c.Request.Method == DELETE_HTTP_METHOD
 }
 
-// Checks whether the HTTP method is OPTIONS or not
-func (c *Context) IsOptions() bool {
-	return c.Request.Method == OPTIONS_HTTP_METHOD
-}
-
 /*
 	RespondWith* methods
 */
@@ -92,7 +86,7 @@ func (c *Context) Respond(data interface{}, statusCode int, errors []string, con
 	obj.E = errors
 	obj.D = data
 	obj.S = statusCode
-	//obj.C = c.GetRequestContext()
+	obj.C = c.GetRequestContext()
 
 	return c.WriteResponse(obj, statusCode)
 
@@ -101,6 +95,8 @@ func (c *Context) Respond(data interface{}, statusCode int, errors []string, con
 // Writes the specified object out (with the specified status code)
 // using the appropriate formatter
 func (c *Context) WriteResponse(obj interface{}, statusCode int) error {
+
+	var error error
 
 	// get the formatter
 	formatter, error := GetFormatter(c)
@@ -116,9 +112,6 @@ func (c *Context) WriteResponse(obj interface{}, statusCode int) error {
 		return error
 	}
 
-    // add the content-length
-    c.ResponseWriter.Header().Add("Content-Length", strconv.Itoa(len(output)))
-	
 	// write the status code
 	if strings.Index(c.Request.URL.String(), REQUEST_ALWAYS200_PARAMETER) > -1 {
 
@@ -133,7 +126,7 @@ func (c *Context) WriteResponse(obj interface{}, statusCode int) error {
 
 	}
 
-	// write the output	
+	// write the output
 	c.ResponseWriter.Write(output)
 
 	// success - no errors
@@ -141,8 +134,8 @@ func (c *Context) WriteResponse(obj interface{}, statusCode int) error {
 
 }
 
-func (c *Context) writeInternalServerError(err error, statusCode int) {
-	http.Error(c.ResponseWriter, err.Error(), statusCode)
+func (c *Context) writeInternalServerError(error error, statusCode int) {
+	http.Error(c.ResponseWriter, error.Error(), statusCode)
 }
 
 // Responds with the specified HTTP status code defined in RFC 2616

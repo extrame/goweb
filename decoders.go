@@ -2,9 +2,9 @@ package goweb
 
 import (
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"io/ioutil"
-	//"encoding/xml"
 	"strings"
 )
 
@@ -30,20 +30,12 @@ func (d *JsonRequestDecoder) Unmarshal(cx *Context, v interface{}) error {
 type XmlRequestDecoder struct{}
 
 func (d *XmlRequestDecoder) Unmarshal(cx *Context, v interface{}) error {
-	// read body
-	// data, err := ioutil.ReadAll(cx.Request.Body) 
-	_, err := ioutil.ReadAll(cx.Request.Body)
+	// read body 
+	data, err := ioutil.ReadAll(cx.Request.Body)
 	if err != nil {
 		return err
 	}
-
-	/*
-		BROKEN: type mismatch between buf (type *strings.Reader) and []byte... punting 
-
-		buf := strings.NewReader(string(data))
-		return xml.Unmarshal(buf, v)
-	*/
-	return err
+	return xml.Unmarshal(data, v)
 }
 
 // a form-enc decoder for request body

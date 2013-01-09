@@ -15,7 +15,7 @@ const XML_FORMAT string = "XML"
 const JSON_FORMAT string = "JSON"
 
 // The fallback format if one cannot be determined by the request
-const DEFAULT_FORMAT string = JSON_FORMAT
+const DEFAULT_FORMAT string = HTML_FORMAT
 
 // Gets a string describing the format of the request.
 func getFormatForRequest(request *http.Request) string {

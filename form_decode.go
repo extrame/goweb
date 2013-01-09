@@ -21,7 +21,7 @@ func UnmarshalForm(form url.Values, v interface{}) error {
 	if rv.Kind() == reflect.Struct {
 		// for each struct field on v
 		for i := 0; i < rt.NumField(); i++ {
-			err := unmarshalField(form, rt.Field(i), rv.Field(i))
+			err := unmarshalField("",form, rt.Field(i), rv.Field(i))
 			if err != nil {
 				return err
 			}
@@ -39,32 +39,48 @@ func UnmarshalForm(form url.Values, v interface{}) error {
 	return nil
 }
 
-func unmarshalField(form url.Values, t reflect.StructField, v reflect.Value) error {
+func unmarshalField(preview string,form url.Values, t reflect.StructField, v reflect.Value) error {
 	// form field value
-	fvs := form[t.Name]
-	if len(fvs) == 0 {
+	tag := t.Tag.Get("form")
+	var fvs []string
+	var id string
+	if tag != "" {
+		id = tag
+	}else{
+		if preview != ""{
+			id = preview + "["+t.Name+"]"
+		}else{
+			id = t.Name
+		}
+	}
+	fvs = form[id]
+	if len(fvs) == 0 && v.Kind() != reflect.Struct {
 		return nil
 	}
-	fv := fvs[0]
 	// string -> type conversion
 	switch v.Kind() {
 	case reflect.Int64:
 		// convert to Int64
-		if i, err := strconv.ParseInt(fv, 10, 64); err == nil {
+		if i, err := strconv.ParseInt(fvs[0], 10, 64); err == nil {
 			v.SetInt(i)
 		}
 	case reflect.Int:
 		// convert to Int
 		// convert to Int64
-		if i, err := strconv.ParseInt(fv, 10, 64); err == nil {
+		if i, err := strconv.ParseInt(fvs[0], 10, 64); err == nil {
 			v.SetInt(i)
 		}
 	case reflect.String:
 		// copy string
-		v.SetString(fv)
+		v.SetString(fvs[0])
+	case reflect.Float64:
+		if f, err := strconv.ParseFloat(fvs[0], 64); err == nil {
+			v.SetFloat(f)
+		}
 	case reflect.Bool:
 		// the following strings convert to true
 		// 1,true,on,yes
+		fv := fvs[0]
 		if fv == "1" || fv == "true" || fv == "on" || fv == "yes" {
 			v.SetBool(true)
 		}
@@ -77,6 +93,14 @@ func unmarshalField(form url.Values, t reflect.StructField, v reflect.Value) err
 			svv.SetString(fv)
 		}
 		v.Set(sv)
+	case reflect.Struct:
+		rt := v.Type()
+		for i := 0; i < rt.NumField(); i++ {
+			err := unmarshalField(id,form, rt.Field(i), v.Field(i))
+			if err != nil {
+				return err
+			}
+		}
 	default:
 		fmt.Println("unknown type", v.Kind())
 	}

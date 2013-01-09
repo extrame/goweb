@@ -117,6 +117,9 @@ func ListenAndServe(pattern string) error {
 	return http.ListenAndServe(pattern, DefaultHttpHandler)
 }
 
+func ListenAndServeInServer(server *http.Server) error {
+	server.Handler = DefaultHttpHandler
+	return server.ListenAndServe()
 func ListenAndServeTLS(pattern string, certFile string, keyFile string) error {
 	return http.ListenAndServeTLS(pattern, certFile, keyFile, DefaultHttpHandler)
 }

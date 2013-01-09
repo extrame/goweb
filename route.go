@@ -63,7 +63,8 @@ func makeRouteFromPath(path string) *Route {
 
 	}
 
-	patternString := "/" + strings.Join(regexSegments, "/")
+	patternString := "^/" + strings.Join(regexSegments, "/")
+
 	// return a new route
 	var route *Route = new(Route)
 	route.pattern = patternString
@@ -97,7 +98,9 @@ func (route *Route) DoesMatchPath(path string) bool {
 			}
 
 		} else {
+
 			return false
+
 		}
 
 	}

@@ -2,7 +2,9 @@ package goweb
 
 // Handler method to read an item by the specified ID
 type RestReader interface {
+	New(c *Context)
 	Read(id string, c *Context)
+	Edit(id string, c *Context)
 }
 
 // Handler method to read many items
