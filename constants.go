@@ -5,7 +5,7 @@ package goweb
 */
 
 // Regex placeholder pattern
-var ROUTE_REGEX_PLACEHOLDER string = "(.*)"
+var ROUTE_REGEX_PLACEHOLDER string = "((?<!new|NEW)|(?!;edit))"
 
 // HTTP Methods
 const GET_HTTP_METHOD string = "GET"

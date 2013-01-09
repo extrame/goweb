@@ -2,8 +2,16 @@ package goweb
 
 // Handler method to read an item by the specified ID
 type RestReader interface {
-	New(c *Context)
 	Read(id string, c *Context)
+}
+
+// Handler method to show the New page for item
+type RestNewer interface {
+	New(c *Context)
+}
+
+// Handler method to show the Edit page for item
+type RestEditor interface {
 	Edit(id string, c *Context)
 }
 
