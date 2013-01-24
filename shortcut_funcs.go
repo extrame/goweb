@@ -51,13 +51,7 @@ func MapRest(pathPrefix string, controller RestController) {
 	// GET /resource/{id}
 	if rc, ok := controller.(RestReader); ok {
 		MapFunc(pathPrefixWithId, func(c *Context) {
-			if isRestNew(c.PathParams["id"]) {
-				rc.New(c)
-			} else if isRestEdit(c.PathParams["id"]) {
-				rc.Edit(strings.Split(c.PathParams["id"], ";")[0], c)
-			} else {
-				rc.Read(c.PathParams["id"], c)
-			}
+			rc.Read(c.PathParams["id"], c)
 		}, GetMethod)
 	}
 	// GET /resource/new

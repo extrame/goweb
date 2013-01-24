@@ -21,11 +21,11 @@ func getPathByContext(cx *Context) (string, string) {
 	id, ok := cx.PathParams["id"]
 	if ok {
 		if cx.IsGet() {
-			if isRestEdit(id) {
-				rest_method = "edit"
-			} else if isRestNew(id) {
+			if id == "new" {
 				rest_method = "new"
-			} else {
+			}else if strings.Contains(id, ";edit"){
+				rest_method = "edit"
+			}else {
 				rest_method = "read"
 			}
 		} else if cx.IsPut() {
