@@ -10,8 +10,8 @@ import (
 
 var store *sessions.CookieStore
 
-func EnableSession() {
-	store = sessions.NewCookieStore([]byte("非常保密"))
+func EnableSession(secret string) {
+	store = sessions.NewCookieStore([]byte(secret))
 }
 
 func MarshallInCookieSession(obj interface{}, r *http.Request, w http.ResponseWriter) {
