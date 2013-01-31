@@ -16,7 +16,7 @@ func safeControllerFunc(controllerFunc func(*Context)) func(*Context) {
 			if err := recover(); err != nil {
 				lines := strings.Split(string(debug.Stack()), "\n")[4:]
 				log.Print("panic: ", err, "\n", strings.Join(lines, "\n"))
-				cx.RespondWithError(500)
+				cx.RespondWithErrorCode(500)
 			}
 		}()
 		controllerFunc(cx)

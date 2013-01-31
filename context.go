@@ -179,12 +179,12 @@ func (c *Context) RespondWithOK() error {
 
 // Responds with 404 Not Found
 func (c *Context) RespondWithNotFound() error {
-	return c.RespondWithError(http.StatusNotFound)
+	return c.RespondWithErrorCode(http.StatusNotFound)
 }
 
 // Responds with 501 Not Implemented
 func (c *Context) RespondWithNotImplemented() error {
-	return c.RespondWithError(http.StatusNotImplemented)
+	return c.RespondWithErrorCode(http.StatusNotImplemented)
 }
 
 // Responds with 302 Temporarily Moved (redirect)
