@@ -152,10 +152,14 @@ func (c *Context) RespondWithStatus(statusCode int) error {
 	return c.Respond(nil, statusCode, nil, c)
 }
 
+func (c *Context) RespondWithError(err error, statusCode int) error {
+	return c.RespondWithErrorMessage(err.Error(), statusCode)
+}
+
 // Responds with the specified HTTP status code defined in RFC 2616
 // and adds the description to the errors list
 // see http://golang.org/src/pkg/http/status.go for options
-func (c *Context) RespondWithError(statusCode int) error {
+func (c *Context) RespondWithErrorCode(statusCode int) error {
 	return c.RespondWithErrorMessage(http.StatusText(statusCode), statusCode)
 }
 
