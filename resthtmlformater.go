@@ -16,35 +16,16 @@ type RestHtmlFormattor struct{}
 var rest_template map[string]*template.Template = map[string]*template.Template{}
 
 func getPathByContext(cx *Context) (string, string) {
-	var rest_method string
 	var file_path string
 	id, ok := cx.PathParams["id"]
 	if ok {
-		if cx.IsGet() {
-			if id == "new" {
-				rest_method = "new"
-			}else if strings.Contains(id, ";edit"){
-				rest_method = "edit"
-			}else {
-				rest_method = "read"
-			}
-		} else if cx.IsPut() {
-			rest_method = "update"
-		} else if cx.IsDelete() {
-			rest_method = "delete"
-		}
-		file_path = strings.Replace(cx.Request.URL.Path, strings.ToLower(id+"."+cx.Format), strings.ToLower(rest_method+"."+cx.Format), -1)
+		file_path = strings.Replace(cx.Request.URL.Path, strings.ToLower(id+"."+cx.Format), strings.ToLower(cx.RestMethod+"."+cx.Format), -1)
 	} else {
-		if cx.IsGet() {
-			rest_method = "readmany"
-		} else if cx.IsPut() {
-			rest_method = "updatemany"
-		} else if cx.IsDelete() {
-			rest_method = "deletemany"
+		if cx.RestMethod == NEW_REST_METHOD {
+			file_path = cx.Request.URL.Path
 		} else {
-			rest_method = "create"
+			file_path = strings.Replace(cx.Request.URL.Path, strings.ToLower("."+cx.Format), strings.ToLower("/"+cx.RestMethod+"."+cx.Format), -1)
 		}
-		file_path = strings.Replace(cx.Request.URL.Path, strings.ToLower("."+cx.Format), strings.ToLower("/"+rest_method+"."+cx.Format), -1)
 	}
 	res := filepath.Join(document_root, file_path)
 	return res, file_path

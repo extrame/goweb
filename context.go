@@ -19,6 +19,9 @@ type Context struct {
 
 	// The format that the response should be
 	Format string
+
+	// Mark the rest mothod for this context
+	RestMethod string
 }
 
 // Helper function to make a new Context object

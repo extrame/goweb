@@ -45,25 +45,28 @@ func MapRest(pathPrefix string, controller RestController) {
 	// OPTIONS /resource
 	if rc, ok := controller.(RestOptions); ok {
 		MapFunc(pathPrefix, func(c *Context) {
+			c.RestMethod = OPTIONS_REST_METHOD
 			rc.Options(c)
 		}, OptionsMethod)
-	}
-	// GET /resource/{id}
-	if rc, ok := controller.(RestReader); ok {
-		MapFunc(pathPrefixWithId, func(c *Context) {
-			rc.Read(c.PathParams["id"], c)
-		}, GetMethod)
 	}
 	// GET /resource/new
 	if rc, ok := controller.(RestNewer); ok {
 		MapFunc(pathPrefix+"/new", func(c *Context) {
+			c.RestMethod = NEW_REST_METHOD
 			rc.New(c)
 		}, GetMethod)
 	}
-
+	// GET /resource/{id}
+	if rc, ok := controller.(RestReader); ok {
+		MapFunc(pathPrefixWithId, func(c *Context) {
+			c.RestMethod = READ_REST_METHOD
+			rc.Read(c.PathParams["id"], c)
+		}, GetMethod)
+	}
 	// GET /resource/{id};edit
 	if rc, ok := controller.(RestEditor); ok {
 		MapFunc(pathPrefixWithId+";edit", func(c *Context) {
+			c.RestMethod = EDIT_REST_METHOD
 			rc.Edit(c.PathParams["id"], c)
 		}, GetMethod)
 	}
@@ -71,36 +74,42 @@ func MapRest(pathPrefix string, controller RestController) {
 	// GET /resource
 	if rc, ok := controller.(RestManyReader); ok {
 		MapFunc(pathPrefix, func(c *Context) {
+			c.RestMethod = READMANY_REST_METHOD
 			rc.ReadMany(c)
 		}, GetMethod)
 	}
 	// PUT /resource/{id}
 	if rc, ok := controller.(RestUpdater); ok {
 		MapFunc(pathPrefixWithId, func(c *Context) {
+			c.RestMethod = UPDATE_REST_METHOD
 			rc.Update(c.PathParams["id"], c)
 		}, PutMethod)
 	}
 	// PUT /resource
 	if rc, ok := controller.(RestManyUpdater); ok {
 		MapFunc(pathPrefix, func(c *Context) {
+			c.RestMethod = UPDATEMANY_REST_METHOD
 			rc.UpdateMany(c)
 		}, PutMethod)
 	}
 	// DELETE /resource/{id}
 	if rc, ok := controller.(RestDeleter); ok {
 		MapFunc(pathPrefixWithId, func(c *Context) {
+			c.RestMethod = DELETE_REST_METHOD
 			rc.Delete(c.PathParams["id"], c)
 		}, DeleteMethod)
 	}
 	// DELETE /resource
 	if rc, ok := controller.(RestManyDeleter); ok {
 		MapFunc(pathPrefix, func(c *Context) {
+			c.RestMethod = DELETEMANY_REST_METHOD
 			rc.DeleteMany(c)
 		}, DeleteMethod)
 	}
 	// CREATE /resource
 	if rc, ok := controller.(RestCreator); ok {
 		MapFunc(pathPrefix, func(c *Context) {
+			c.RestMethod = CREATE_REST_METHOD
 			rc.Create(c)
 		}, PostMethod)
 	}

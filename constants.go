@@ -14,6 +14,18 @@ const PUT_HTTP_METHOD string = "PUT"
 const DELETE_HTTP_METHOD string = "DELETE"
 const OPTIONS_HTTP_METHOD string = "OPTIONS"
 
+// RESTFUL Methods
+const READ_REST_METHOD string = "read"
+const READMANY_REST_METHOD string = "readmany"
+const DELETE_REST_METHOD string = "delete"
+const DELETEMANY_REST_METHOD string = "deletemany"
+const UPDATE_REST_METHOD string = "update"
+const UPDATEMANY_REST_METHOD string = "updatemany"
+const EDIT_REST_METHOD string = "edit"
+const CREATE_REST_METHOD string = "create"
+const NEW_REST_METHOD string = "new"
+const OPTIONS_REST_METHOD string = "options"
+
 /*
 	Error messages
 */
