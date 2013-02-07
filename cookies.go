@@ -52,7 +52,7 @@ func (c *Context) AddSignedCookie(cookie *http.Cookie) (*http.Cookie, error) {
 	signedCookie.Value = Hash(cookie.Value)
 
 	// add the cookies
-	//http.SetCookie(c.ResponseWriter, cookie)
+	http.SetCookie(c.ResponseWriter, cookie)
 	http.SetCookie(c.ResponseWriter, signedCookie)
 
 	// return the new signed cookie (and no error)
