@@ -92,7 +92,7 @@ func getRestModelByContext(cx *Context) *template.Template{
 }
 
 func getMethodTemplate(m *template.Template,rest *RestContext) *template.Template {
-	t := m.Lookup(rest.Method)
+	t := m.Lookup(rest.Method+".html")
 	var err error
 	if t == nil {
 		t, err = m.New(rest.Method + ".html").ParseFiles(filepath.Join(document_root, rest.Url, rest.Method+".html"))
