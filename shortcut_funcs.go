@@ -39,34 +39,40 @@ func MapFunc(path string, controllerFunc func(*Context), matcherFuncs ...RouteMa
 // You only have to specify the methods that you require see rest_controller.go
 // for the list of interfaces that can be satisfied
 func MapRest(pathPrefix string, controller RestController) {
+	var rest RestContext
+	rest.Url = pathPrefix
 
 	var pathPrefixWithId string = pathPrefix + "/{id}"
 
 	// OPTIONS /resource
 	if rc, ok := controller.(RestOptions); ok {
 		MapFunc(pathPrefix, func(c *Context) {
-			c.RestMethod = OPTIONS_REST_METHOD
+			c.Rest = rest
+			c.Rest.Method = OPTIONS_REST_METHOD
 			rc.Options(c)
 		}, OptionsMethod)
 	}
 	// GET /resource/new
 	if rc, ok := controller.(RestNewer); ok {
 		MapFunc(pathPrefix+"/new", func(c *Context) {
-			c.RestMethod = NEW_REST_METHOD
+			c.Rest = rest
+			c.Rest.Method = NEW_REST_METHOD
 			rc.New(c)
 		}, GetMethod)
 	}
 	// GET /resource/{id}
 	if rc, ok := controller.(RestReader); ok {
 		MapFunc(pathPrefixWithId, func(c *Context) {
-			c.RestMethod = READ_REST_METHOD
+			c.Rest = rest
+			c.Rest.Method = READ_REST_METHOD
 			rc.Read(c.PathParams["id"], c)
 		}, GetMethod)
 	}
 	// GET /resource/{id};edit
 	if rc, ok := controller.(RestEditor); ok {
 		MapFunc(pathPrefixWithId+";edit", func(c *Context) {
-			c.RestMethod = EDIT_REST_METHOD
+			c.Rest = rest
+			c.Rest.Method = EDIT_REST_METHOD
 			rc.Edit(c.PathParams["id"], c)
 		}, GetMethod)
 	}
@@ -74,42 +80,48 @@ func MapRest(pathPrefix string, controller RestController) {
 	// GET /resource
 	if rc, ok := controller.(RestManyReader); ok {
 		MapFunc(pathPrefix, func(c *Context) {
-			c.RestMethod = READMANY_REST_METHOD
+			c.Rest = rest
+			c.Rest.Method = READMANY_REST_METHOD
 			rc.ReadMany(c)
 		}, GetMethod)
 	}
 	// PUT /resource/{id}
 	if rc, ok := controller.(RestUpdater); ok {
 		MapFunc(pathPrefixWithId, func(c *Context) {
-			c.RestMethod = UPDATE_REST_METHOD
+			c.Rest = rest
+			c.Rest.Method = UPDATE_REST_METHOD
 			rc.Update(c.PathParams["id"], c)
 		}, PutMethod)
 	}
 	// PUT /resource
 	if rc, ok := controller.(RestManyUpdater); ok {
 		MapFunc(pathPrefix, func(c *Context) {
-			c.RestMethod = UPDATEMANY_REST_METHOD
+			c.Rest = rest
+			c.Rest.Method = UPDATEMANY_REST_METHOD
 			rc.UpdateMany(c)
 		}, PutMethod)
 	}
 	// DELETE /resource/{id}
 	if rc, ok := controller.(RestDeleter); ok {
 		MapFunc(pathPrefixWithId, func(c *Context) {
-			c.RestMethod = DELETE_REST_METHOD
+			c.Rest = rest
+			c.Rest.Method = DELETE_REST_METHOD
 			rc.Delete(c.PathParams["id"], c)
 		}, DeleteMethod)
 	}
 	// DELETE /resource
 	if rc, ok := controller.(RestManyDeleter); ok {
 		MapFunc(pathPrefix, func(c *Context) {
-			c.RestMethod = DELETEMANY_REST_METHOD
+			c.Rest = rest
+			c.Rest.Method = DELETEMANY_REST_METHOD
 			rc.DeleteMany(c)
 		}, DeleteMethod)
 	}
 	// CREATE /resource
 	if rc, ok := controller.(RestCreator); ok {
 		MapFunc(pathPrefix, func(c *Context) {
-			c.RestMethod = CREATE_REST_METHOD
+			c.Rest = rest
+			c.Rest.Method = CREATE_REST_METHOD
 			rc.Create(c)
 		}, PostMethod)
 	}

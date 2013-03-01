@@ -21,7 +21,7 @@ type Context struct {
 	Format string
 
 	// Mark the rest mothod for this context
-	RestMethod string
+	Rest RestContext
 }
 
 // Helper function to make a new Context object
