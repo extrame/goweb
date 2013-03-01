@@ -20,7 +20,7 @@ type RestModelTemplate struct {
 
 var rest_model = template.New("REST_HTTP_ROOT")
 
-func parseFileWithName(parent *template.Template,name string, filepath string) error {
+func parseFileWithName(parent *template.Template, name string, filepath string) error {
 	b, err := ioutil.ReadFile(filepath)
 	if err != nil {
 		return err
@@ -45,13 +45,13 @@ func parseFileWithName(parent *template.Template,name string, filepath string) e
 	return nil
 }
 
-func initModelTemplate(url string) *template.Template{
+func initModelTemplate(url string) *template.Template {
 	temp := rest_model.New(url)
 	//scan for the helpers
 	filepath.Walk(filepath.Join(document_root, url, "helper"), func(path string, info os.FileInfo, err error) error {
 		if err == nil && (!info.IsDir()) {
 			fmt.Println("Parse helper:", path)
-			e := parseFileWithName(temp,filepath.Join("model", info.Name()), path)
+			e := parseFileWithName(temp, filepath.Join("model", info.Name()), path)
 			if e != nil {
 				fmt.Printf("ERROR template.ParseFile: %v", e)
 			}
@@ -66,7 +66,7 @@ func initGlobalTemplate() {
 	filepath.Walk(filepath.Join(document_root, "helper"), func(path string, info os.FileInfo, err error) error {
 		if err == nil && (!info.IsDir()) {
 			fmt.Println("Parse helper:", path)
-			e := parseFileWithName(rest_model,filepath.Join("global", info.Name()), path)
+			e := parseFileWithName(rest_model, filepath.Join("global", info.Name()), path)
 			if e != nil {
 				fmt.Printf("ERROR template.ParseFile: %v", e)
 			}
@@ -81,18 +81,33 @@ func SetDocumentRoot(root string) {
 	initGlobalTemplate()
 }
 
-func getRestModelByContext(cx *Context) *template.Template{
-	t := rest_model.Lookup(cx.Rest.Url)
-	
-	if t == nil {
-		return initModelTemplate(cx.Rest.Url)
+func getRestModelByContext(cx *Context) *template.Template {
+	var t *template.Template
+	var err error
+
+	if cx.Rest.Url == "" || cx.Rest.Method == "" {
+		t := rest_model.Lookup(cx.Request.URL.Path)
+
+		if t == nil {
+			err = parseFileWithName(rest_model, cx.Request.URL.Path, filepath.Join(document_root,cx.Request.URL.Path))
+			if err == nil {
+				return rest_model.Lookup(cx.Request.URL.Path)
+			}
+		}
+	} else {
+		t := rest_model.Lookup(cx.Rest.Url)
+
+		if t == nil {
+			t := initModelTemplate(cx.Rest.Url)
+			getMethodTemplate(t,&cx.Rest)
+		}
 	}
-	
+
 	return t
 }
 
-func getMethodTemplate(m *template.Template,rest *RestContext) *template.Template {
-	t := m.Lookup(rest.Method+".html")
+func getMethodTemplate(m *template.Template, rest *RestContext) *template.Template {
+	t := m.Lookup(rest.Method + ".html")
 	var err error
 	if t == nil {
 		t, err = m.New(rest.Method + ".html").ParseFiles(filepath.Join(document_root, rest.Url, rest.Method+".html"))
@@ -106,10 +121,8 @@ func getMethodTemplate(m *template.Template,rest *RestContext) *template.Templat
 // Readies response and converts input data into JSON
 func (f *RestHtmlFormattor) Format(cx *Context, input interface{}) ([]uint8, error) {
 	//get the document root dir
-	model := getRestModelByContext(cx)
-	
-	temp := getMethodTemplate(model,&cx.Rest)
-	
+	temp := getRestModelByContext(cx)
+
 	var err error
 
 	buffer := new(bytes.Buffer)

@@ -139,3 +139,10 @@ func MapStatic(pathPrefix string, rootDirectory string) {
 		http.ServeFile(cx.ResponseWriter, cx.Request, path)
 	})
 }
+
+func MapFormattedStatic(pathPrefix string) {
+	fmt.Println("========-------======")
+	MapFunc(pathPrefix, func(cx *Context) {
+		cx.RespondWithOK();
+	})
+}
