@@ -10,8 +10,8 @@ import (
 // DefaultRouteManager to route requests to the right places
 type HttpHandler struct {
 	routeManager *RouteManager
+	IndexPath string
 }
-
 // Serves the HTTP request and writes the response to the specified writer
 func (handler *HttpHandler) ServeHTTP(responseWriter http.ResponseWriter, request *http.Request) {
 	var route *Route
@@ -20,9 +20,11 @@ func (handler *HttpHandler) ServeHTTP(responseWriter http.ResponseWriter, reques
 
 	// do we need to spoof the HTTP method?
 	overrideMethod := request.URL.Query().Get(REQUEST_METHOD_OVERRIDE_PARAMETER)
+	
 	if overrideMethod != "" {
 		request.Method = strings.ToUpper(overrideMethod)
 	}
+
 
 	// get the matching route
 	found, route, context = handler.GetMathingRoute(responseWriter, request)
@@ -60,6 +62,11 @@ func (h *HttpHandler) GetMathingRoute(responseWriter http.ResponseWriter, reques
 	var route *Route
 	var found bool = false
 	var context *Context
+	
+	if request.URL.Path == "/" {
+		request.URL.Path = h.IndexPath
+	}
+	
 	for i := 0; i < len(h.routeManager.routes); i++ {
 		route = h.routeManager.routes[i]
 		if route.DoesMatchPath(request.URL.Path) {
@@ -94,7 +101,11 @@ func (h *HttpHandler) HandleError(context *Context, err error) {
 }
 
 // The default http handler used to handle requests
-var DefaultHttpHandler *HttpHandler = &HttpHandler{routeManager: DefaultRouteManager}
+var DefaultHttpHandler *HttpHandler = &HttpHandler{routeManager: DefaultRouteManager,IndexPath:"/"}
+
+func SetDefaultIndex(path string){
+	DefaultHttpHandler.IndexPath = path
+}
 
 // Listens for incomming requests and handles them using
 // the DefaultHttpHandler

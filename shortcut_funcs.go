@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"runtime/debug"
 	"strings"
+	"path/filepath"
 )
 
 // Wraps a controllerFunc to catch any panics, log them and
@@ -131,17 +132,13 @@ func MapRest(pathPrefix string, controller RestController) {
 func MapStatic(pathPrefix string, rootDirectory string) {
 	MapFunc(pathPrefix, func(cx *Context) {
 		path := cx.Request.URL.Path
-		if !strings.HasPrefix(path, "/") {
-			path = "/" + path
-		}
-		path = rootDirectory + path
+		path = filepath.Join(rootDirectory, path)
 		fmt.Println("static:", path)
 		http.ServeFile(cx.ResponseWriter, cx.Request, path)
 	})
 }
 
 func MapFormattedStatic(pathPrefix string) {
-	fmt.Println("========-------======")
 	MapFunc(pathPrefix, func(cx *Context) {
 		cx.RespondWithOK();
 	})

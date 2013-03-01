@@ -83,15 +83,24 @@ func SetDocumentRoot(root string) {
 
 func getRestModelByContext(cx *Context) *template.Template {
 	var t *template.Template
-	var err error
 
 	if cx.Rest.Url == "" || cx.Rest.Method == "" {
-		t := rest_model.Lookup(cx.Request.URL.Path)
+		var path = filepath.Join(document_root,cx.Request.URL.Path)
+	
+		t = rest_model.Lookup(cx.Request.URL.Path)
+		
+		info,err := os.Stat(path)
+		
+		if err == nil && info.IsDir() {
+			path = filepath.Join(path,"index.html")
+		}
 
 		if t == nil {
-			err = parseFileWithName(rest_model, cx.Request.URL.Path, filepath.Join(document_root,cx.Request.URL.Path))
+			err = parseFileWithName(rest_model, cx.Request.URL.Path, path)
 			if err == nil {
 				return rest_model.Lookup(cx.Request.URL.Path)
+			}else{
+				fmt.Println("ERROR template.ParseFile: %v", err)
 			}
 		}
 	} else {
