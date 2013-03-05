@@ -104,12 +104,12 @@ func getRestModelByContext(cx *Context) *template.Template {
 			}
 		}
 	} else {
-		t := rest_model.Lookup(cx.Rest.Url)
+		t = rest_model.Lookup(cx.Rest.Url)
 
 		if t == nil {
-			t := initModelTemplate(cx.Rest.Url)
-			getMethodTemplate(t,&cx.Rest)
+			t = initModelTemplate(cx.Rest.Url)
 		}
+		return getMethodTemplate(t,&cx.Rest)
 	}
 
 	return t
