@@ -100,6 +100,10 @@ func (c *Context) Respond(data interface{}, statusCode int, errors []string, con
 
 }
 
+func (c *Context) RespondRaw([]byte raw){
+	c.ResponseWriter.Write(raw)
+}
+
 // Writes the specified object out (with the specified status code)
 // using the appropriate formatter
 func (c *Context) WriteResponse(obj interface{}, statusCode int) error {
