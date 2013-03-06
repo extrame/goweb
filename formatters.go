@@ -117,9 +117,6 @@ type RawFormatter struct{}
 func (f *RawFormatter) Format(cx *Context, input interface{}) ([]uint8, error) {
 	// marshal json
 	output := []byte(input)
-	if err != nil {
-		return nil, err
-	}
 
 	return output, nil
 }
