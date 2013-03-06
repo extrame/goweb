@@ -104,6 +104,31 @@ func (f *JsonFormatter) Match(cx *Context) bool {
 	return strings.ToUpper(cx.Format) == JSON_FORMAT
 }
 
+/*
+
+	Default internal formatters
+
+*/
+
+// Formatter for JSON
+type RawFormatter struct{}
+
+// Readies response and converts input data into JSON
+func (f *RawFormatter) Format(cx *Context, input interface{}) ([]uint8, error) {
+	// marshal json
+	output, err := []byte(input)
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+// Gets the "application/json" content type
+func (f *RawFormatter) Match(cx *Context) bool {
+	return true
+}
+
 // Adds the default formatters to goweb so that
 func ConfigureDefaultFormatters() {
 	AddFormatter(new(JsonFormatter))
