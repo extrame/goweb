@@ -100,7 +100,7 @@ func (c *Context) Respond(data interface{}, statusCode int, errors []string, con
 
 }
 
-func (c *Context) RespondRaw([]byte raw){
+func (c *Context) RespondRaw(raw []byte) {
 	c.ResponseWriter.Write(raw)
 }
 
