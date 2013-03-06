@@ -116,7 +116,7 @@ type RawFormatter struct{}
 // Readies response and converts input data into JSON
 func (f *RawFormatter) Format(cx *Context, input interface{}) ([]uint8, error) {
 	// marshal json
-	output := []byte(input)
+	output, err := []byte(input)
 	if err != nil {
 		return nil, err
 	}
