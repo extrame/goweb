@@ -3,6 +3,7 @@ package goweb
 import (
 	"net/http"
 	"strings"
+	"log"
 )
 
 // Object holding details about the request and responses
@@ -100,10 +101,6 @@ func (c *Context) Respond(data interface{}, statusCode int, errors []string, con
 
 }
 
-func (c *Context) RespondRaw(raw []byte) {
-	c.ResponseWriter.Write(raw)
-}
-
 // Writes the specified object out (with the specified status code)
 // using the appropriate formatter
 func (c *Context) WriteResponse(obj interface{}, statusCode int) error {
@@ -118,9 +115,10 @@ func (c *Context) WriteResponse(obj interface{}, statusCode int) error {
 	}
 
 	// format the output
-	output, error := formatter.Format(c, obj)
-	if error != nil {
-		c.writeInternalServerError(error, http.StatusInternalServerError)
+	output, err := formatter.Format(c, obj)
+	if err != nil {
+		log.Println("[Goweb]",err)
+		c.writeInternalServerError(err, http.StatusInternalServerError)
 		return error
 	}
 

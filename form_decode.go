@@ -77,6 +77,10 @@ func unmarshalField(preview string,form url.Values, t reflect.StructField, v ref
 		if f, err := strconv.ParseFloat(fvs[0], 64); err == nil {
 			v.SetFloat(f)
 		}
+	case reflect.Float32:
+		if f, err := strconv.ParseFloat(fvs[0], 32); err == nil {
+			v.SetFloat(f)
+		}
 	case reflect.Bool:
 		// the following strings convert to true
 		// 1,true,on,yes
