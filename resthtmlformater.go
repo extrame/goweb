@@ -19,6 +19,7 @@ type RestModelTemplate struct {
 }
 
 var rest_model = template.New("REST_HTTP_ROOT")
+var rest_models = make(map[string]*template.Template)
 
 func parseFileWithName(parent *template.Template, name string, filepath string) error {
 	b, err := ioutil.ReadFile(filepath)
@@ -46,19 +47,25 @@ func parseFileWithName(parent *template.Template, name string, filepath string) 
 }
 
 func initModelTemplate(url string) *template.Template {
-	temp := rest_model.New(url)
-	//scan for the helpers
-	filepath.Walk(filepath.Join(document_root, url, "helper"), func(path string, info os.FileInfo, err error) error {
-		if err == nil && (!info.IsDir()) {
-			fmt.Println("Parse helper:", path)
-			e := parseFileWithName(temp, filepath.Join("model", info.Name()), path)
-			if e != nil {
-				fmt.Printf("ERROR template.ParseFile: %v", e)
+	temp,err := rest_model.Clone()
+	if err == nil {
+		temp = temp.New(url)
+		//scan for the helpers
+		filepath.Walk(filepath.Join(document_root, url, "helper"), func(path string, info os.FileInfo, err error) error {
+			if err == nil && (!info.IsDir()) {
+				fmt.Println("Parse helper:", path)
+				e := parseFileWithName(temp, filepath.Join("model", info.Name()), path)
+				if e != nil {
+					fmt.Printf("ERROR template.ParseFile: %v", e)
+				}
 			}
-		}
-		return nil
-	})
-	return temp
+			return nil
+		})
+		rest_models[url]=temp
+		return temp
+	}
+	fmt.Println("error happened",err)
+	return nil
 }
 
 func initGlobalTemplate() {
@@ -86,29 +93,35 @@ func getRestModelByContext(cx *Context) *template.Template {
 
 	if cx.Rest.Url == "" || cx.Rest.Method == "" {
 		var path = filepath.Join(document_root,cx.Request.URL.Path)
-	
-		t = rest_model.Lookup(cx.Request.URL.Path)
+		t = rest_models[cx.Request.URL.Path]
 		
-		info,err := os.Stat(path)
-		
-		if err == nil && info.IsDir() {
-			path = filepath.Join(path,"index.html")
-		}
-
 		if t == nil {
-			err = parseFileWithName(rest_model, cx.Request.URL.Path, path)
+			cloned_rest_model,err := rest_model.Clone();
+			
 			if err == nil {
-				return rest_model.Lookup(cx.Request.URL.Path)
-			}else{
-				fmt.Println("ERROR template.ParseFile: %v", err)
+				
+				info,err := os.Stat(path)
+				
+				if err == nil && info.IsDir() {
+					path = filepath.Join(path,"index.html")
+				}
+		
+				err = parseFileWithName(cloned_rest_model, cx.Request.URL.Path, path)
+				if err == nil {
+					t = cloned_rest_model.Lookup(cx.Request.URL.Path)
+				}else{
+					fmt.Println("ERROR template.ParseFile: %v", err)
+				}
+				rest_models[cx.Request.URL.Path]=t
 			}
 		}
 	} else {
-		t = rest_model.Lookup(cx.Rest.Url)
+		t = rest_models[cx.Rest.Url]
 
 		if t == nil {
 			t = initModelTemplate(cx.Rest.Url)
 		}
+		
 		return getMethodTemplate(t,&cx.Rest)
 	}
 
