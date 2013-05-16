@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"path/filepath"
 	"runtime/debug"
 	"strings"
-	"path/filepath"
 )
 
 // Wraps a controllerFunc to catch any panics, log them and
@@ -138,8 +138,8 @@ func MapStatic(pathPrefix string, rootDirectory string) {
 	})
 }
 
-func MapFormattedStatic(pathPrefix string) {
+func MapFormattedStatic(pathPrefix string, obj interface{}) {
 	MapFunc(pathPrefix, func(cx *Context) {
-		cx.RespondWithOK();
+		cx.WriteResponse(obj, 200)
 	})
 }

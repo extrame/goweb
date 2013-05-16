@@ -143,6 +143,7 @@ func getMethodTemplate(m *template.Template, rest *RestContext) *template.Templa
 // Readies response and converts input data into JSON
 func (f *RestHtmlFormattor) Format(cx *Context, input interface{}) ([]uint8, error) {
 	//get the document root dir
+	cx.ResponseWriter.Header().Set("Content-Type", "text/html; charset=utf-8")
 	temp := getRestModelByContext(cx)
 
 	var err error
