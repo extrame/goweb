@@ -47,7 +47,7 @@ func parseFileWithName(parent *template.Template, name string, filepath string) 
 }
 
 func initModelTemplate(url string) *template.Template {
-	temp,err := rest_model.Clone()
+	temp, err := rest_model.Clone()
 	if err == nil {
 		temp = temp.New(url)
 		//scan for the helpers
@@ -61,14 +61,15 @@ func initModelTemplate(url string) *template.Template {
 			}
 			return nil
 		})
-		rest_models[url]=temp
+		rest_models[url] = temp
 		return temp
 	}
-	fmt.Println("error happened",err)
+	fmt.Println("error happened", err)
 	return nil
 }
 
 func initGlobalTemplate() {
+	rest_model.New("")
 	//scan for the helpers
 	filepath.Walk(filepath.Join(document_root, "helper"), func(path string, info os.FileInfo, err error) error {
 		if err == nil && (!info.IsDir()) {
@@ -92,27 +93,27 @@ func getRestModelByContext(cx *Context) *template.Template {
 	var t *template.Template
 
 	if cx.Rest.Url == "" || cx.Rest.Method == "" {
-		var path = filepath.Join(document_root,cx.Request.URL.Path)
+		var path = filepath.Join(document_root, cx.Request.URL.Path)
 		t = rest_models[cx.Request.URL.Path]
-		
+
 		if t == nil {
-			cloned_rest_model,err := rest_model.Clone();
-			
+			cloned_rest_model, err := rest_model.Clone()
+
 			if err == nil {
-				
-				info,err := os.Stat(path)
-				
+
+				info, err := os.Stat(path)
+
 				if err == nil && info.IsDir() {
-					path = filepath.Join(path,"index.html")
+					path = filepath.Join(path, "index.html")
 				}
-		
+
 				err = parseFileWithName(cloned_rest_model, cx.Request.URL.Path, path)
 				if err == nil {
 					t = cloned_rest_model.Lookup(cx.Request.URL.Path)
-				}else{
+				} else {
 					fmt.Println("ERROR template.ParseFile: %v", err)
 				}
-				rest_models[cx.Request.URL.Path]=t
+				rest_models[cx.Request.URL.Path] = t
 			}
 		}
 	} else {
@@ -121,8 +122,8 @@ func getRestModelByContext(cx *Context) *template.Template {
 		if t == nil {
 			t = initModelTemplate(cx.Rest.Url)
 		}
-		
-		return getMethodTemplate(t,&cx.Rest)
+
+		return getMethodTemplate(t, &cx.Rest)
 	}
 
 	return t

@@ -61,7 +61,7 @@ func MapRest(pathPrefix string, controller RestController) {
 			rc.New(c)
 		}, GetMethod)
 	}
-	// GET /resource/{id};edit
+	// GET /resource/{id}/edit
 	if rc, ok := controller.(RestEditor); ok {
 		MapFunc(pathPrefixWithId+"/edit", func(c *Context) {
 			c.Rest = rest
