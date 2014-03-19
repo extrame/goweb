@@ -78,7 +78,6 @@ func parseFileWithName(parent *template.Template, name string, filepath string) 
 }
 
 func (f *RestHtmlFormattor) initModelTemplate(url string) *template.Template {
-	fmt.Println(f.root)
 	temp, err := f.root.Clone()
 	if err == nil {
 		temp = temp.New(url)
@@ -193,12 +192,9 @@ func (f *RestHtmlFormattor) Format(cx *Context, input interface{}) ([]uint8, err
 	var err error
 
 	buffer := new(bytes.Buffer)
-	std_input, ok := input.(*standardResponse)
-	if ok {
-		err = temp.Execute(buffer, std_input.D)
-	} else {
-		err = temp.Execute(buffer, input)
-	}
+
+	err = temp.Execute(buffer, input)
+
 	if err != nil {
 		fmt.Printf("ERROR template.Execute: %v", err)
 		return nil, err
