@@ -18,7 +18,7 @@ func isExtensionSegment(segment string) bool {
 // Splits a path into its segments
 func getPathSegments(path string) []string {
 
-	ext := getFileExtension(path)
+	ext, _ := getFileExtension(path)
 
 	// trim off the extension (if it's there)
 	if len(ext) > 0 {
@@ -50,16 +50,18 @@ func getParameterValueMap(keys ParameterKeyMap, path string) ParameterValueMap {
 }
 
 // Gets the file extension (in uppercase) from a path
-func getFileExtension(path string) string {
+func getFileExtension(path string) (ext string, prefix string) {
+
+	path = strings.ToLower(path)
 
 	lastDot := strings.LastIndex(path, ".")
 
 	if lastDot == -1 {
-		return "" /* no extension */
+		return "", path /* no extension */
 	} else {
-		return path[lastDot+1:]
+		return path[lastDot+1:], path[0:lastDot]
 	}
 
-	return ""
+	return "", path
 
 }

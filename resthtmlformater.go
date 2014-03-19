@@ -7,19 +7,50 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 var document_root string
 
 // Formatter for JSON
-type RestHtmlFormattor struct{}
+type RestHtmlFormattor struct {
+	root      *template.Template
+	models    map[string]*template.Template
+	suffix    string
+	dotsuffix string
+}
+
+type MobileRestHtmlFormattor struct {
+	RestHtmlFormattor
+}
 
 type RestModelTemplate struct {
 	template.Template
 }
 
-var rest_model = template.New("REST_HTTP_ROOT")
-var rest_models = make(map[string]*template.Template)
+func (r *RestHtmlFormattor) Init() {
+	r.suffix = "html"
+	r.dotsuffix = ".html"
+	r.init()
+}
+
+func (r *MobileRestHtmlFormattor) Init() {
+	r.suffix = "mbl"
+	r.dotsuffix = ".mbl"
+	r.init()
+}
+
+func (r *RestHtmlFormattor) init() {
+	r.root = template.New("REST_HTTP_ROOT")
+	r.models = make(map[string]*template.Template)
+	r.initGlobalTemplate()
+}
+
+// Gets the "application/html" content type
+func (f *RestHtmlFormattor) Match(cx *Context) bool {
+	fmt.Println(cx.Format, f.suffix)
+	return cx.Format == f.suffix
+}
 
 func parseFileWithName(parent *template.Template, name string, filepath string) error {
 	b, err := ioutil.ReadFile(filepath)
@@ -46,35 +77,38 @@ func parseFileWithName(parent *template.Template, name string, filepath string) 
 	return nil
 }
 
-func initModelTemplate(url string) *template.Template {
-	temp, err := rest_model.Clone()
+func (f *RestHtmlFormattor) initModelTemplate(url string) *template.Template {
+	fmt.Println(f.root)
+	temp, err := f.root.Clone()
 	if err == nil {
 		temp = temp.New(url)
 		//scan for the helpers
 		filepath.Walk(filepath.Join(document_root, url, "helper"), func(path string, info os.FileInfo, err error) error {
-			if err == nil && (!info.IsDir()) {
+			if err == nil && (!info.IsDir()) && strings.HasSuffix(info.Name(), f.dotsuffix) {
 				fmt.Println("Parse helper:", path)
-				e := parseFileWithName(temp, filepath.Join("model", info.Name()), path)
+				name := strings.TrimSuffix(info.Name(), f.dotsuffix)
+				e := parseFileWithName(temp, "model/"+name, path)
 				if e != nil {
 					fmt.Printf("ERROR template.ParseFile: %v", e)
 				}
 			}
 			return nil
 		})
-		rest_models[url] = temp
+		f.models[url] = temp
 		return temp
 	}
 	fmt.Println("error happened", err)
 	return nil
 }
 
-func initGlobalTemplate() {
-	rest_model.New("")
+func (f *RestHtmlFormattor) initGlobalTemplate() {
+	f.root.New("")
 	//scan for the helpers
 	filepath.Walk(filepath.Join(document_root, "helper"), func(path string, info os.FileInfo, err error) error {
-		if err == nil && (!info.IsDir()) {
+		if err == nil && (!info.IsDir()) && strings.HasSuffix(info.Name(), f.dotsuffix) {
 			fmt.Println("Parse helper:", path)
-			e := parseFileWithName(rest_model, filepath.Join("global", info.Name()), path)
+			name := strings.TrimSuffix(info.Name(), f.dotsuffix)
+			e := parseFileWithName(f.root, "global/"+name, path)
 			if e != nil {
 				fmt.Printf("ERROR template.ParseFile: %v", e)
 			}
@@ -86,54 +120,63 @@ func initGlobalTemplate() {
 //Set the root for the rest html formating, formating is based on the method name(lower case)
 func SetDocumentRoot(root string) {
 	document_root = root
-	initGlobalTemplate()
 }
 
-func getRestModelByContext(cx *Context) *template.Template {
+func (f *RestHtmlFormattor) getRestModelByContext(cx *Context) *template.Template {
 	var t *template.Template
+	var path string
 
 	if cx.Rest.Url == "" || cx.Rest.Method == "" {
-		var path = filepath.Join(document_root, cx.Request.URL.Path)
-		t = rest_models[cx.Request.URL.Path]
+		path = filepath.Join(document_root, cx.PathWithOutSuffix)
+		if info, err := os.Stat(path); err == nil {
+			if info.IsDir() {
+				path = filepath.Join(document_root, cx.PathWithOutSuffix+"index"+f.dotsuffix)
+			}
+		} else {
+			path = path + f.dotsuffix
+		}
+		var urlpath = cx.PathWithOutSuffix + f.dotsuffix
+		// var path = filepath.Join(document_root, urlpath)
+		t = f.models[urlpath]
 
 		if t == nil {
-			cloned_rest_model, err := rest_model.Clone()
+			cloned_rest_model, err := f.root.Clone()
 
 			if err == nil {
 
 				info, err := os.Stat(path)
 
 				if err == nil && info.IsDir() {
-					path = filepath.Join(path, "index.html")
+					path = filepath.Join(path, "index"+f.dotsuffix)
 				}
 
-				err = parseFileWithName(cloned_rest_model, cx.Request.URL.Path, path)
+				err = parseFileWithName(cloned_rest_model, urlpath, path)
 				if err == nil {
-					t = cloned_rest_model.Lookup(cx.Request.URL.Path)
+					t = cloned_rest_model.Lookup(urlpath)
 				} else {
 					fmt.Println("ERROR template.ParseFile: %v", err)
 				}
-				rest_models[cx.Request.URL.Path] = t
+				f.models[urlpath] = t
 			}
 		}
 	} else {
-		t = rest_models[cx.Rest.Url]
+		t = f.models[cx.Rest.Url]
 
 		if t == nil {
-			t = initModelTemplate(cx.Rest.Url)
+			t = f.initModelTemplate(cx.Rest.Url)
 		}
 
-		return getMethodTemplate(t, &cx.Rest)
+		return f.getMethodTemplate(t, &cx.Rest)
 	}
 
 	return t
 }
 
-func getMethodTemplate(m *template.Template, rest *RestContext) *template.Template {
-	t := m.Lookup(rest.Method + ".html")
+func (f *RestHtmlFormattor) getMethodTemplate(m *template.Template, rest *RestContext) *template.Template {
+	t := m.Lookup(rest.Method + f.dotsuffix)
 	var err error
 	if t == nil {
-		t, err = m.New(rest.Method + ".html").ParseFiles(filepath.Join(document_root, rest.Url, rest.Method+".html"))
+		t, err = m.New(rest.Method + f.dotsuffix).ParseFiles(filepath.Join(document_root, rest.Url, rest.Method+f.dotsuffix))
 		if err != nil {
 			fmt.Println("ERROR template.ParseFile: %v", err)
 		}
@@ -145,7 +188,7 @@ func getMethodTemplate(m *template.Template, rest *RestContext) *template.Templa
 func (f *RestHtmlFormattor) Format(cx *Context, input interface{}) ([]uint8, error) {
 	//get the document root dir
 	cx.ResponseWriter.Header().Set("Content-Type", "text/html; charset=utf-8")
-	temp := getRestModelByContext(cx)
+	temp := f.getRestModelByContext(cx)
 
 	var err error
 
@@ -166,9 +209,4 @@ func (f *RestHtmlFormattor) Format(cx *Context, input interface{}) ([]uint8, err
 	}
 
 	return buffer.Bytes(), nil
-}
-
-// Gets the "application/json" content type
-func (f *RestHtmlFormattor) Match(cx *Context) bool {
-	return cx.Format == HTML_FORMAT
 }

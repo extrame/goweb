@@ -1,10 +1,12 @@
 package goweb
 
 import (
+	"log"
 	"net/http"
 	"strings"
-	"log"
 )
+
+var UseStandardResponse = true
 
 // Object holding details about the request and responses
 type Context struct {
@@ -23,6 +25,11 @@ type Context struct {
 
 	// Mark the rest mothod for this context
 	Rest RestContext
+
+	// Stard Path
+	PathWithOutSuffix string
+	//parsed request bytes
+	RequestData []byte
 }
 
 // Helper function to make a new Context object
@@ -37,7 +44,7 @@ func makeContext(request *http.Request, responseWriter http.ResponseWriter, path
 	context.PathParams = pathParams
 
 	// note the format
-	context.Format = getFormatForRequest(request)
+	context.Format, context.PathWithOutSuffix = getFormatForRequest(request)
 
 	return context
 }
@@ -91,13 +98,17 @@ func (c *Context) IsOptions() bool {
 func (c *Context) Respond(data interface{}, statusCode int, errors []string, context *Context) error {
 
 	// make the standard response object
-	obj := makeStandardResponse()
-	obj.E = errors
-	obj.D = data
-	obj.S = statusCode
-	obj.C = c.GetRequestContext()
+	if UseStandardResponse {
+		obj := makeStandardResponse()
+		obj.E = errors
+		obj.D = data
+		obj.S = statusCode
+		obj.C = c.GetRequestContext()
 
-	return c.WriteResponse(obj, statusCode)
+		return c.WriteResponse(obj, 200)
+	} else {
+		return c.WriteResponse(data, statusCode)
+	}
 
 }
 
@@ -117,7 +128,7 @@ func (c *Context) WriteResponse(obj interface{}, statusCode int) error {
 	// format the output
 	output, err := formatter.Format(c, obj)
 	if err != nil {
-		log.Println("[Goweb]",err)
+		log.Println("[Goweb]", err)
 		c.writeInternalServerError(err, http.StatusInternalServerError)
 		return error
 	}
@@ -166,7 +177,7 @@ func (c *Context) RespondWithErrorCode(statusCode int) error {
 }
 
 func (c *Context) RespondWithErrorMessage(message string, statusCode int) error {
-	return c.Respond(nil, statusCode, []string{message}, c)
+	return c.Respond(message, statusCode, []string{message}, c)
 }
 
 // Responds with the specified data

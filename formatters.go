@@ -3,27 +3,29 @@ package goweb
 import (
 	"encoding/json"
 	"errors"
-	"strings"
 )
 
-// Interface describing an object responsible for 
+// Interface describing an object responsible for
 // handling transformed/formatted response data
 type Formatter interface {
 	// method to transform response
 	Format(context *Context, input interface{}) ([]uint8, error)
 	// method that decides if this formatter will be used
 	Match(*Context) bool
+	// init the formatter
+	Init()
 }
 
 // Internal collection of formatters
-var formatters []Formatter
+var formatters []Formatter = make([]Formatter, 0)
+var default_formatter Formatter
 
-// Adds a formatter decider 
-func AddFormatter(formatter Formatter) {
-	if formatters == nil {
-		formatters = make([]Formatter, 0)
+// Adds a formatter decider
+func AddFormatter(fs ...Formatter) {
+	for _, f := range fs {
+		f.Init()
 	}
-	formatters = append([]Formatter{formatter}, formatters...)
+	formatters = append(formatters, fs...)
 }
 
 // Clears all formatters (including default internal ones)
@@ -45,6 +47,10 @@ func GetFormatter(cx *Context) (Formatter, error) {
 		if formatter.Match(cx) {
 			return formatter, nil
 		}
+	}
+
+	if default_formatter != nil {
+		return default_formatter, nil
 	}
 
 	// none found
@@ -90,7 +96,7 @@ func (f *JsonFormatter) Format(cx *Context, input interface{}) ([]uint8, error) 
 		output = []uint8(outputString)
 
 	} else {
-		// normal json content type 
+		// normal json content type
 		cx.ResponseWriter.Header().Set("Content-Type", "application/json")
 		cx.ResponseWriter.Header().Set("Access-Control-Allow-Origin", "*")
 		cx.ResponseWriter.Header().Set("Access-Control-Allow-Headers", "Authorization")
@@ -101,7 +107,10 @@ func (f *JsonFormatter) Format(cx *Context, input interface{}) ([]uint8, error) 
 
 // Gets the "application/json" content type
 func (f *JsonFormatter) Match(cx *Context) bool {
-	return strings.ToUpper(cx.Format) == JSON_FORMAT
+	return cx.Format == JSON_FORMAT
+}
+
+func (f *JsonFormatter) Init() {
 }
 
 // Adds the default formatters to goweb so that

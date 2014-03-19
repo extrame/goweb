@@ -140,6 +140,11 @@ func MapStatic(pathPrefix string, rootDirectory string) {
 
 func MapFormattedStatic(pathPrefix string, obj interface{}) {
 	MapFunc(pathPrefix, func(cx *Context) {
+		fmt.Println("formated static")
 		cx.WriteResponse(obj, 200)
 	})
+}
+
+func MapFormattedStaticWithFunc(pathPrefix string, f func(cx *Context)) {
+	MapFunc(pathPrefix, f)
 }
