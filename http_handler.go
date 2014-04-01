@@ -26,7 +26,7 @@ func (handler *HttpHandler) ServeHTTP(responseWriter http.ResponseWriter, reques
 		responseWriter.Header().Set("Content-Encoding", "gzip")
 		gz := gzip.NewWriter(responseWriter)
 		defer gz.Close()
-		changedResponseWriter = gzipResponseWriter{Writer: gz, ResponseWriter: responseWriter}
+		changedResponseWriter = GzipResponseWriter{Writer: gz, ResponseWriter: responseWriter}
 	} else {
 		changedResponseWriter = responseWriter
 	}

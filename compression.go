@@ -4,12 +4,12 @@ import (
 	"io"
 	"net/http"
 )
- 
-type gzipResponseWriter struct {
+
+type GzipResponseWriter struct {
 	io.Writer
 	http.ResponseWriter
 }
 
-func (w gzipResponseWriter) Write(b []byte) (int, error) {
+func (w GzipResponseWriter) Write(b []byte) (int, error) {
 	return w.Writer.Write(b)
 }

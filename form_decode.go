@@ -38,6 +38,7 @@ func UnmarshalForm(form *map[string][]string, v interface{}, autofill bool) erro
 func unmarshalStructInForm(context string, form *map[string][]string, rvalue reflect.Value, offset int, autofill bool) (err error) {
 
 	if rvalue.Type().Kind() == reflect.Ptr {
+
 		rvalue = rvalue.Elem()
 	}
 	rtype := rvalue.Type()
@@ -51,21 +52,24 @@ func unmarshalStructInForm(context string, form *map[string][]string, rvalue ref
 			used_offset = offset
 		}
 		switch rtype.Field(i).Type.Kind() {
-		case reflect.Struct:
-			if rtype.Field(i).Type.PkgPath() == "time" && rtype.Field(i).Type.Name() == "Time" {
-				if len(tag) > 0 && tag[0] == "fillby(now)" && autofill {
-					rvalue.Field(i).Set(reflect.ValueOf(time.Now()))
-				} else if len(form_values) > 0 {
-					time, err := time.Parse(time.RFC3339, form_values[used_offset])
-					if err == nil {
-						rvalue.Field(i).Set(reflect.ValueOf(time))
-					} else {
-						fmt.Println(err)
-						return err
-					}
-				}
+		case reflect.Ptr:
+			val := rvalue.Field(i)
+			typ := rtype.Field(i).Type.Elem()
+			if val.IsNil() {
+				val.Set(reflect.New(typ))
+			}
+			if err := fill_struct(typ, form, rvalue.Field(i), id, form_values, tag, used_offset, autofill); err != nil {
+				fmt.Println(err)
+				return err
 			} else {
-				unmarshalStructInForm(id, form, rvalue.Field(i), 0, autofill)
+				break
+			}
+		case reflect.Struct:
+			if err := fill_struct(rtype.Field(i).Type, form, rvalue.Field(i), id, form_values, tag, used_offset, autofill); err != nil {
+				fmt.Println(err)
+				return err
+			} else {
+				break
 			}
 		case reflect.Slice:
 
@@ -117,7 +121,7 @@ func getFormField(prefix string, form *map[string][]string, t reflect.StructFiel
 	if prefix != "" {
 		tag1 := prefix + "[" + tag + "]"
 		tag2 := fmt.Sprintf(prefix+"[%d]"+"["+tag+"]", offset)
-
+		fmt.Println(tag1, tag2, *form)
 		values = (*form)[tag1]
 		tag = tag1
 
@@ -128,6 +132,25 @@ func getFormField(prefix string, form *map[string][]string, t reflect.StructFiel
 		}
 	}
 	return tag, values, tags[1:], increaseOffset
+}
+
+func fill_struct(typ reflect.Type, form *map[string][]string, val reflect.Value, id string, form_values []string, tag []string, used_offset int, autofill bool) error {
+	if typ.PkgPath() == "time" && typ.Name() == "Time" {
+		if len(tag) > 0 && tag[0] == "fillby(now)" && autofill {
+			val.Set(reflect.ValueOf(time.Now()))
+		} else if len(form_values) > 0 {
+			time, err := time.Parse(time.RFC3339, form_values[used_offset])
+			if err == nil {
+				val.Set(reflect.ValueOf(time))
+			} else {
+				fmt.Println(err)
+				return err
+			}
+		}
+	} else {
+		unmarshalStructInForm(id, form, val, 0, autofill)
+	}
+	return nil
 }
 
 func unmarshalField(context string, form *map[string][]string, v reflect.Value, form_value string, autofill bool, tags []string) error {
