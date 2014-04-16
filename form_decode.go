@@ -21,7 +21,7 @@ func UnmarshalForm(form *map[string][]string, v interface{}, autofill bool) erro
 	if rv.Kind() == reflect.Struct {
 
 		// for each struct field on v
-		unmarshalStructInForm("", form, rv, 0, autofill)
+		unmarshalStructInForm("", form, rv, 0, autofill, false)
 	} else if rv.Kind() == reflect.Map && !rv.IsNil() {
 		// for each form value add it to the map
 		for k, v := range *form {
@@ -35,7 +35,7 @@ func UnmarshalForm(form *map[string][]string, v interface{}, autofill bool) erro
 	return nil
 }
 
-func unmarshalStructInForm(context string, form *map[string][]string, rvalue reflect.Value, offset int, autofill bool) (err error) {
+func unmarshalStructInForm(context string, form *map[string][]string, rvalue reflect.Value, offset int, autofill bool, inarray bool) (err error) {
 
 	if rvalue.Type().Kind() == reflect.Ptr {
 
@@ -46,7 +46,7 @@ func unmarshalStructInForm(context string, form *map[string][]string, rvalue ref
 	success := false
 
 	for i := 0; i < rtype.NumField(); i++ {
-		id, form_values, tag, increaseOffset := getFormField(context, form, rtype.Field(i), offset)
+		id, form_values, tag, increaseOffset := getFormField(context, form, rtype.Field(i), offset, inarray)
 		var used_offset = 0
 		if increaseOffset {
 			used_offset = offset
@@ -72,7 +72,6 @@ func unmarshalStructInForm(context string, form *map[string][]string, rvalue ref
 				break
 			}
 		case reflect.Slice:
-
 			subRType := rtype.Field(i).Type.Elem()
 			switch subRType.Kind() {
 			case reflect.Struct:
@@ -80,8 +79,10 @@ func unmarshalStructInForm(context string, form *map[string][]string, rvalue ref
 				subRValue := reflect.New(subRType)
 				offset := 0
 				for {
-					err = unmarshalStructInForm(id, form, subRValue, offset, autofill)
+					fmt.Println("id ==", id)
+					err = unmarshalStructInForm(id, form, subRValue, offset, autofill, true)
 					if err != nil {
+						fmt.Println(err)
 						break
 					}
 
@@ -103,13 +104,14 @@ func unmarshalStructInForm(context string, form *map[string][]string, rvalue ref
 			}
 		}
 	}
+	fmt.Println(rvalue.Interface(), success)
 	if !success {
 		return errors.New("no more element")
 	}
-	return
+	return nil
 }
 
-func getFormField(prefix string, form *map[string][]string, t reflect.StructField, offset int) (string, []string, []string, bool) {
+func getFormField(prefix string, form *map[string][]string, t reflect.StructField, offset int, inarray bool) (string, []string, []string, bool) {
 	tags := strings.Split(t.Tag.Get("form"), ",")
 	tag := tags[0]
 	var values = (*form)[tag]
@@ -119,17 +121,15 @@ func getFormField(prefix string, form *map[string][]string, t reflect.StructFiel
 		values = (*form)[tag]
 	}
 	if prefix != "" {
-		tag1 := prefix + "[" + tag + "]"
-		tag2 := fmt.Sprintf(prefix+"[%d]"+"["+tag+"]", offset)
-		fmt.Println(tag1, tag2, *form)
-		values = (*form)[tag1]
-		tag = tag1
-
-		if (*form)[tag2] != nil {
-			values = (*form)[tag2]
-			tag = tag2
+		if inarray {
 			increaseOffset = false
+			tag = fmt.Sprintf(prefix+"[%d]"+"["+tag+"]", offset)
+		} else {
+			increaseOffset = true
+			tag = prefix + "[" + tag + "]"
 		}
+		values = (*form)[tag]
+		fmt.Println(tag, values)
 	}
 	return tag, values, tags[1:], increaseOffset
 }
@@ -148,7 +148,7 @@ func fill_struct(typ reflect.Type, form *map[string][]string, val reflect.Value,
 			}
 		}
 	} else {
-		unmarshalStructInForm(id, form, val, 0, autofill)
+		unmarshalStructInForm(id, form, val, 0, autofill, false)
 	}
 	return nil
 }
