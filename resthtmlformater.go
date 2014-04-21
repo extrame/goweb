@@ -42,6 +42,7 @@ func (r *MobileRestHtmlFormattor) Init() {
 
 func (r *RestHtmlFormattor) init() {
 	r.root = template.New("REST_HTTP_ROOT")
+	r.root.Funcs(template.FuncMap{"raw": RawHtml})
 	r.models = make(map[string]*template.Template)
 	r.initGlobalTemplate()
 }
@@ -206,3 +207,5 @@ func (f *RestHtmlFormattor) Format(cx *Context, input interface{}) ([]uint8, err
 
 	return buffer.Bytes(), nil
 }
+
+func RawHtml(text string) template.HTML { return template.HTML(text) }

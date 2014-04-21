@@ -52,7 +52,7 @@ func unmarshalStructInForm(context string, form *map[string][]string, rvalue ref
 			used_offset = offset
 		}
 		switch rtype.Field(i).Type.Kind() {
-		case reflect.Ptr:
+		case reflect.Ptr: //TODO if the ptr point to a basic data, it will crash
 			val := rvalue.Field(i)
 			typ := rtype.Field(i).Type.Elem()
 			if val.IsNil() {
@@ -79,7 +79,6 @@ func unmarshalStructInForm(context string, form *map[string][]string, rvalue ref
 				subRValue := reflect.New(subRType)
 				offset := 0
 				for {
-					fmt.Println("id ==", id)
 					err = unmarshalStructInForm(id, form, subRValue, offset, autofill, true)
 					if err != nil {
 						fmt.Println(err)
