@@ -16,6 +16,9 @@ const XML_FORMAT string = "xml"
 // Constant string for JSON format
 const JSON_FORMAT string = "json"
 
+// Constant string for JSON format
+const RAW_FORMAT string = "raw"
+
 // The fallback format if one cannot be determined by the request
 var DEFAULT_FORMAT string = HTML_FORMAT
 

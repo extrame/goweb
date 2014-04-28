@@ -49,7 +49,6 @@ func (r *RestHtmlFormattor) init() {
 
 // Gets the "application/html" content type
 func (f *RestHtmlFormattor) Match(cx *Context) bool {
-	fmt.Println(cx.Format, f.suffix)
 	return cx.Format == f.suffix
 }
 

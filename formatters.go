@@ -113,6 +113,37 @@ func (f *JsonFormatter) Match(cx *Context) bool {
 func (f *JsonFormatter) Init() {
 }
 
+// Formatter for JSON
+type RawFormatter struct{}
+
+// Readies response and converts input data into JSON
+func (f *RawFormatter) Format(cx *Context, input interface{}) (output []uint8, err error) {
+
+	switch t := input.(type) {
+	case string:
+		output = []byte(t)
+	case []byte:
+		output = t
+	default:
+		output, err = json.Marshal(input)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	cx.ResponseWriter.Header().Set("Content-Type", "text/html")
+
+	return output, nil
+}
+
+// Gets the "application/json" content type
+func (f *RawFormatter) Match(cx *Context) bool {
+	return cx.Format == RAW_FORMAT
+}
+
+func (f *RawFormatter) Init() {
+}
+
 // Adds the default formatters to goweb so that
 func ConfigureDefaultFormatters() {
 	AddFormatter(new(JsonFormatter))

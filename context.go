@@ -95,10 +95,10 @@ func (c *Context) IsOptions() bool {
 /*
 	RespondWith* methods
 */
-func (c *Context) Respond(data interface{}, statusCode int, errors []string, context *Context) error {
+func (c *Context) Respond(data interface{}, statusCode int, errors []string, context *Context, standard bool) error {
 
 	// make the standard response object
-	if UseStandardResponse {
+	if standard {
 		obj := makeStandardResponse()
 		obj.E = errors
 		obj.D = data
@@ -162,7 +162,7 @@ func (c *Context) writeInternalServerError(error error, statusCode int) {
 // Responds with the specified HTTP status code defined in RFC 2616
 // see http://golang.org/src/pkg/http/status.go for options
 func (c *Context) RespondWithStatus(statusCode int) error {
-	return c.Respond(nil, statusCode, nil, c)
+	return c.Respond(nil, statusCode, nil, c, UseStandardResponse)
 }
 
 func (c *Context) RespondWithError(err error, statusCode int) error {
@@ -177,12 +177,17 @@ func (c *Context) RespondWithErrorCode(statusCode int) error {
 }
 
 func (c *Context) RespondWithErrorMessage(message string, statusCode int) error {
-	return c.Respond(message, statusCode, []string{message}, c)
+	return c.Respond(message, statusCode, []string{message}, c, UseStandardResponse)
 }
 
 // Responds with the specified data
 func (c *Context) RespondWithData(data interface{}) error {
-	return c.Respond(data, http.StatusOK, nil, c)
+	return c.Respond(data, http.StatusOK, nil, c, UseStandardResponse)
+}
+
+// Responds with the specified data
+func (c *Context) RespondWithRawData(data interface{}) error {
+	return c.Respond(data, http.StatusOK, nil, c, false)
 }
 
 // Responds with OK status (200) and no data
