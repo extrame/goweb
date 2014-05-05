@@ -57,7 +57,11 @@ type MultiFormRequestDecoder struct{}
 
 func (d *MultiFormRequestDecoder) Unmarshal(cx *Context, v interface{}, autofill bool) error {
 	cx.Request.ParseMultipartForm(32 << 20)
-	return UnmarshalForm(&cx.Request.MultipartForm.Value, v, autofill)
+	values := (map[string][]string)(cx.Request.Form)
+	for k, v := range cx.Request.MultipartForm.Value {
+		values[k] = v
+	}
+	return UnmarshalForm(&values, v, autofill)
 }
 
 // map of Content-Type -> RequestDecoders
