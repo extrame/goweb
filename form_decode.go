@@ -91,10 +91,11 @@ func unmarshalStructInForm(context string, form *map[string][]string, rvalue ref
 				rvalue.Field(i).Set(rvalueTemp)
 			default:
 				len_fv := len(form_values)
-				rvalue = reflect.MakeSlice(rtype.Field(i).Type, len_fv, len_fv)
-				for i := 0; i < len_fv; i++ {
-					unmarshalField(context, form, rvalue.Field(i), form_values[i], autofill, tag)
+				rvnew := reflect.MakeSlice(rtype.Field(i).Type, len_fv, len_fv)
+				for j := 0; j < len_fv; j++ {
+					unmarshalField(context, form, rvnew.Index(j), form_values[i], autofill, tag)
 				}
+				rvalue.Field(i).Set(rvnew)
 			}
 		default:
 			if len(form_values) > 0 && used_offset < len(form_values) {
