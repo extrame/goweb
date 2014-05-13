@@ -2,6 +2,7 @@ package goweb
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"html/template"
 	"io/ioutil"
@@ -42,8 +43,11 @@ func (r *MobileRestHtmlFormattor) Init() {
 
 func (r *RestHtmlFormattor) init() {
 	r.root = template.New("REST_HTTP_ROOT")
-	r.root.Funcs(template.FuncMap{"raw": RawHtml})
-	r.root.Funcs(template.FuncMap{"divisible": Divisible})
+	r.root.Funcs(template.FuncMap{
+		"raw":       RawHtml,
+		"dict":      DictArgument,
+		"divisible": Divisible,
+	})
 	r.models = make(map[string]*template.Template)
 	r.initGlobalTemplate()
 }
@@ -212,4 +216,18 @@ func RawHtml(text string) template.HTML { return template.HTML(text) }
 
 func Divisible(n, b int) bool {
 	return n%b == 0
+}
+func DictArgument(values ...interface{}) (map[string]interface{}, error) {
+	if len(values)%2 != 0 {
+		return nil, errors.New("invalid dict call")
+	}
+	dict := make(map[string]interface{}, len(values)/2)
+	for i := 0; i < len(values); i += 2 {
+		key, ok := values[i].(string)
+		if !ok {
+			return nil, errors.New("dict keys must be strings")
+		}
+		dict[key] = values[i+1]
+	}
+	return dict, nil
 }
