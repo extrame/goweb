@@ -11,6 +11,9 @@ type standardResponse struct {
 	// The HTTP Status code of this response
 	S int
 
+	// Host name
+	H string
+
 	// The data (if any) for this response
 	D interface{}
 

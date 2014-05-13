@@ -104,6 +104,7 @@ func (c *Context) Respond(data interface{}, statusCode int, errors []string, con
 		obj.D = data
 		obj.S = statusCode
 		obj.C = c.GetRequestContext()
+		obj.H = c.Request.Host
 
 		return c.WriteResponse(obj, 200)
 	} else {
